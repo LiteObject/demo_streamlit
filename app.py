@@ -1,12 +1,16 @@
 """
 Streamlit AI Chatbot App
 
-This app allows users to ask questions and optionally upload a PDF file. If a PDF is uploaded, its text is included in the prompt to the language model. The app uses environment variables for model configuration and provides user-friendly error handling and feedback.
+This app allows users to ask questions and optionally upload a PDF file. 
+If a PDF is uploaded, its text is included in the prompt to the language 
+model. The app uses environment variables for model configuration and 
+provides user-friendly error handling and feedback.
 """
 import os
 from dotenv import load_dotenv  # For loading environment variables from a .env file
 import streamlit as st  # Streamlit for building the web UI
-from langchain.chat_models import init_chat_model  # For initializing the chat model
+# For initializing the chat model
+from langchain.chat_models import init_chat_model
 from langchain.prompts import PromptTemplate  # For prompt templates
 from pypdf import PdfReader  # For reading PDF files
 from pypdf.errors import PdfReadError  # For handling PDF read errors
@@ -16,9 +20,12 @@ load_dotenv()
 
 # Initialize the chat model using environment variables or defaults
 llm = init_chat_model(
-    os.getenv("MODEL_NAME", "llama3.2:latest"),  # Model name from .env or default
-    model_provider=os.getenv("MODEL_PROVIDER", "ollama"),  # Provider from .env or default
-    temperature=float(os.getenv("TEMPERATURE", "0.7")),  # Temperature from .env or default
+    # Model name from .env or default
+    os.getenv("MODEL_NAME", "llama3.2:latest"),
+    # Provider from .env or default
+    model_provider=os.getenv("MODEL_PROVIDER", "ollama"),
+    # Temperature from .env or default
+    temperature=float(os.getenv("TEMPERATURE", "0.7")),
 )
 
 # Set the title of the Streamlit app
@@ -54,10 +61,12 @@ if button and user_input.strip():
                         text = text[:8000] + "..."  # Truncate if too long
                         break
             except PdfReadError as e:
-                st.error(f"Failed to read PDF: {e}")  # Show error if PDF can't be read
+                # Show error if PDF can't be read
+                st.error(f"Failed to read PDF: {e}")
                 text = ""
             except FileNotFoundError as e:
-                st.error(f"File not found: {e}")  # Show error if file not found
+                # Show error if file not found
+                st.error(f"File not found: {e}")
                 text = ""
         # Choose prompt template based on whether PDF text is present
         if text:
@@ -80,17 +89,20 @@ if button and user_input.strip():
                             </question>
                             """)
         # Fill the prompt template with user input and PDF text (if any)
-        prompt = prompt_template.format(
+        formatted_prompt = prompt_template.format(
             question=user_input,
             text=text
         )
         try:
-            response = llm.invoke(prompt)  # Send the prompt to the language model
+            # Send the prompt to the language model
+            response = llm.invoke(formatted_prompt)
             st.write(response.content)  # Display the model's response
         except llm.ModelInvocationError as e:
-            st.error(f"Model invocation failed: {e}")  # Show error if model fails
+            # Show error if model fails
+            st.error(f"Model invocation failed: {e}")
         except TimeoutError as e:
-            st.error(f"Model invocation timed out: {e}")  # Show error if model times out
+            # Show error if model times out
+            st.error(f"Model invocation timed out: {e}")
         except Exception as e:
             st.error(f"Unexpected error: {e}")  # Show any other errors
             raise  # re-raise the exception

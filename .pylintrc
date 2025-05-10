@@ -1,0 +1,5 @@
+[FORMAT]
+good-names=i,j,k,ex,Run,_,formatted_prompt
+
+[MESSAGES CONTROL]
+disable=invalid-name
