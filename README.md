@@ -14,8 +14,8 @@ This is a simple Streamlit application that allows users to interact with a chat
 
 2. **(Recommended) Create and activate a virtual environment:**
    ```sh
-   python -m venv venv
-   venv\Scripts\activate
+   python -m venv .venv
+   .venv\Scripts\activate
    ```
 
 3. **Install dependencies:**
