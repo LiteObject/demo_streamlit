@@ -59,9 +59,9 @@ if prompt:
         st.markdown(prompt)
         st.session_state.messages.append(HumanMessage(content=prompt))
 
-    # Generate and display the assistant's response
+    # Show a spinner while waiting for the model's response
     with st.chat_message("assistant"):
-        # Get response from the model
-        response = llm(st.session_state.messages)
+        with st.spinner("Thinking..."):
+            response = llm(st.session_state.messages)
         st.markdown(response.content)
         st.session_state.messages.append(AIMessage(content=response.content))
