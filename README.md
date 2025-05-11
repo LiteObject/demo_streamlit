@@ -14,7 +14,7 @@ This repository contains two Streamlit web applications: an AI Chatbot and a Que
 
 1. **Clone the repository:**
    ```sh
-   git clone <your-repo-url>
+   git clone https://github.com/LiteObject/demo_streamlit.git
    cd demo_streamlit
    ```
 
@@ -54,7 +54,7 @@ The app will open in your browser at `http://localhost:8501` by default.
 
 ## Requirements
 
-- Python 3.8+
+- Python 3.10+
 - See `requirements.txt` for Python dependencies.
 
 ---
