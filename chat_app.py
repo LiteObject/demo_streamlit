@@ -1,9 +1,7 @@
 """
-AI Chatbot Streamlit App
+Streamlit AI Chatbot App
 
-This module provides a simple web-based chatbot interface using Streamlit and LangChain.
-Users can interact with an AI assistant, and the chat history is maintained in the session state.
-Model configuration is loaded from environment variables or defaults.
+This app provides a web-based chat interface using Streamlit and LangChain. Users can interact with an AI assistant powered by a configurable language model. The chat history is maintained in the session state for a seamless conversational experience. Model configuration is loaded from environment variables or defaults.
 """
 import os
 
