@@ -60,7 +60,7 @@ agent = initialize_agent(
 )
 
 # Set the title of the Streamlit app
-st.title("✨ AI Chatbot")
+st.title("✨ AI Chatbot Agent")
 
 # Initialize the chat history in session state if it doesn't exist
 if "messages" not in st.session_state:
