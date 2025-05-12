@@ -45,11 +45,8 @@ def get_weather(place_name: str) -> str:
 weather_tool = Tool(
     name="get_weather",
     func=get_weather,
-    description="Get the weather for a given place."
+    description="Use this tool to provide current weather information for a specified city or location."
 )
-
-# List of tools to provide to the agent
-tools = [weather_tool]
 
 # Initialize the chat language model using environment variables or defaults
 llm = init_chat_model(
@@ -78,10 +75,37 @@ db_error = None
 try:
     db = SQLDatabase.from_uri(conn_str)
     sqltoolkit = SQLDatabaseToolkit(db=db, llm=llm)
-    tools.extend(sqltoolkit.get_tools())
+    # tools.extend(sqltoolkit.get_tools())
 except psycopg2.Error as e:
     db_error = e
     st.write(f"DB connection error: {e}")
+
+
+def general_chat_tool(query: str) -> str:
+    """
+    Use the LLM to answer general questions.
+
+    Args:
+        query (str): The question to be answered.
+
+    Returns:
+        str: The answer to the question.
+    """
+    return llm.invoke(query).content
+
+
+general_chat = Tool(
+    name="general_chat",
+    func=general_chat_tool,
+    description=(
+        "Use this tool to answer any question or engage in conversation when the user's request does not match another tool. "
+        "This is the default for general conversation or open-ended questions."
+    )
+)
+
+# List of tools to provide to the agent
+tools = [general_chat, weather_tool]
+tools.extend(sqltoolkit.get_tools())
 
 # Initialize the agent with whatever tools are available
 try:
@@ -107,7 +131,12 @@ if db_error:
 if "messages" not in st.session_state:
     st.session_state.messages = [
         SystemMessage(
-            content="You are a helpful assistant. Answer the user's questions."
+            content=(
+                "You are a helpful assistant. "
+                "For general conversation or questions, use the 'general_chat' tool. "
+                "Only use the database tools if the user asks about the database. "
+                "Do not list the tools to the user. Choose the best tool yourself and provide a direct answer."
+            )
         )
     ]
 
