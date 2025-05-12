@@ -6,19 +6,20 @@ Users can interact with an AI assistant, and the chat history is maintained in t
 A custom tool (get_weather) is integrated using LangChain's agent framework.
 Model configuration is loaded from environment variables or defaults.
 """
+import logging
 import os
 
+import psycopg2
+import streamlit as st  # Streamlit for building the web UI
 # Load environment variables from a .env file
 from dotenv import load_dotenv
+from langchain.agents import AgentType, initialize_agent
 # Import LangChain chat model and message types
 from langchain.chat_models import init_chat_model
 from langchain.tools import Tool
-from langchain.agents import initialize_agent, AgentType
-from langchain_community.utilities import SQLDatabase
 from langchain_community.agent_toolkits import SQLDatabaseToolkit
+from langchain_community.utilities import SQLDatabase
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
-import streamlit as st  # Streamlit for building the web UI
-import logging
 
 logging.basicConfig(level=logging.DEBUG)
 logging.debug("This is a debug message")
@@ -58,26 +59,18 @@ llm = init_chat_model(
 )
 
 # Read DB_ values
-# db_host = os.getenv("DB_HOST")
-# db_user = os.getenv("DB_USER")
-# db_password = os.getenv("DB_PASSWORD")
-# db_name = os.getenv("DB_NAME")
-# db_port = os.getenv("DB_PORT")
+db_host = os.getenv("DB_HOST")
+db_user = os.getenv("DB_USER")
+db_password = os.getenv("DB_PASSWORD")
+db_name = os.getenv("DB_NAME")
+db_port = os.getenv("DB_PORT")
 
-# Debug: print DB connection info (mask password)
-# st.write(f"DB_HOST: {db_host}")
-# st.write(f"DB_USER: {db_user}")
-# st.write(f"DB_PASSWORD: {'***' if db_password else None}")
-# st.write(f"DB_NAME: {db_name}")
-# st.write(f"DB_PORT: {db_port}")
-
-db_user = "user"
-db_password = "password"  # <-- Replace with your real password
-db_host = "127.0.0.1"  # Use IP instead of localhost
-db_port = "5432"
-db_name = "city_db"
-
-conn_str = f"postgresql+psycopg2://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}?connect_timeout=5"
+conn_str = (
+    f"postgresql+psycopg2://"
+    f"{db_user}:{db_password}"
+    f"@{db_host}:{db_port}/"
+    f"{db_name}?connect_timeout=5"
+)
 
 sqltoolkit = None
 db_error = None
@@ -86,7 +79,7 @@ try:
     db = SQLDatabase.from_uri(conn_str)
     sqltoolkit = SQLDatabaseToolkit(db=db, llm=llm)
     tools.extend(sqltoolkit.get_tools())
-except Exception as e:
+except psycopg2.Error as e:
     db_error = e
     st.write(f"DB connection error: {e}")
 
@@ -99,7 +92,7 @@ try:
         verbose=True,
         handle_parsing_errors=True
     )
-except Exception as e:
+except (ValueError, RuntimeError) as e:
     st.error(f"Agent initialization error: {e}")
     st.stop()
 
@@ -146,6 +139,17 @@ if prompt:
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
             # Use the agent to process the chat history and tools
-            response = agent.run(st.session_state.messages)
-        st.markdown(response)  # Display the agent's response
-        st.session_state.messages.append(AIMessage(content=response))
+            try:
+                response = agent.run(st.session_state.messages)
+            except agent.AgentError as e:
+                st.session_state.messages.append(
+                    AIMessage(content="Sorry, something went wrong. Please try again."))
+                st.error("Agent error. Please check logs for details.")
+                logging.exception("Agent run failed")
+            except ValueError as e:
+                # Handle value errors
+                st.error("Invalid input. Please try again.")
+                logging.exception("Invalid input")
+            else:
+                st.markdown(response)
+                st.session_state.messages.append(AIMessage(content=response))
